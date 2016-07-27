@@ -1,30 +1,22 @@
 #!/bin/bash
 
+# $1 - path to gnuplot input file
 
-# $ARGV[0] - directory of input and datafile
-# $ARGV[1] - gnuplot input file
+file=$1
 
-wd=$(pwd)
-cd $ARGV[0]
+gnuin=$(echo $file | awk 'BEGIN { FS = "/" };{ print $NF }')
+dir=$(echo $file | awk 'BEGIN { FS = "/" };NF{ NF -=1 };{ OFS = "/" };1')
+
+echo "Processed: $file"
+cp $file ${gnuin}_tmp
 
 # modify output path
-outp=$(grep 'set output' $ARGV[1])
-outp=$(cut -d ' ' -f 3 $outp)
-outp=$(echo $outp | cut -d ''"'"'' -f 4)
-sed "s:"$outp":"$ARGV[0]"/"$outp":g" $ARGV[1] > $ARGV[1]_tmp
+grep 'set output' $file | awk '{ print $NF }' | cut -d ''"'"'' -f 2 | xargs -n 1 -I {} sed -i 's:'{}':'$dir/{}':' ${gnuin}_tmp
 
 # modify data path
-inp=$(grep 'file = ' $ARGV[1]) 
-inp=$(cut -d ' ' -f 3 $inp)
-inp=$(echo $inp | cut -d '"' -f 2)
-sed -i "s:"$inp":"$ARGV[0]"/"$inp":g" $ARGV[1] > $ARGV[1]_tmp
+grep 'file = ' $file | awk '{ print $NF }' | cut -d '"' -f 2 | xargs -n 1 -I {} sed -i 's:'{}':'$dir/{}':' ${gnuin}_tmp
 
-gnuplot $ARGV[1]_tmp
+gnuplot ${gnuin}_tmp
 
-
-cd $wd
-
-
-
-
+rm -r ${gnuin}_tmp
 
